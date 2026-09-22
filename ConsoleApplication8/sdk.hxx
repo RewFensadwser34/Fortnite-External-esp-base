@@ -11,7 +11,6 @@
 #define M_PI 3.14159265358979323846264338327950288419716939937510
 #endif
 
-// ---------- math ----------
 class Vector2 {
 public:
 	Vector2() : x(0.0), y(0.0) {}
@@ -140,9 +139,7 @@ struct FNRot {
 	double c = 0.0;
 };
 
-// ---------- namespaces the game code expects ----------
 
-// Screen state shared by w2s and esp (was missing -> C2653 'settings')
 namespace settings {
 	inline int width = 1920;
 	inline int height = 1080;
@@ -157,12 +154,9 @@ namespace settings {
 		screen_center_x = w / 2;
 		screen_center_y = h / 2;
 	}
-} // namespace settings
+} 
 
-// UWorld decryption chain:
-//   GEngine = read(base + offsets::GEngine);
-//   GameViewport = read(GEngine + offsets::GameViewport);
-//   UWorld = read(GameViewport + offsets::ViewportClient);
+
 inline std::uintptr_t decrypt_uworld(std::uintptr_t image_base) {
 	if (!image_base)
 		return 0;
@@ -175,7 +169,6 @@ inline std::uintptr_t decrypt_uworld(std::uintptr_t image_base) {
 	return read<std::uintptr_t>(game_viewport + offsets::ViewportClient);
 }
 
-// Cached game pointers (was 'CAHEING' -> C2653 'cache')
 namespace cache {
 	inline std::uintptr_t base = 0;
 	inline std::uintptr_t uworld = 0;
@@ -195,13 +188,11 @@ namespace cache {
 	inline std::uintptr_t closest_mesh = 0;
 	inline Camera local_camera;
 
-	// Refresh the chain. Returns false when the game isn't ready yet.
 	inline bool update(std::uintptr_t image_base) {
 		if (!image_base)
 			return false;
 		base = image_base;
 
-		// Primary: GEngine decryption chain, fallback: direct UWORLD offset
 		uworld = decrypt_uworld(base);
 		if (!uworld)
 			uworld = read<std::uintptr_t>(base + offsets::core::UWORLD);
@@ -237,9 +228,8 @@ namespace cache {
 			return false;
 		return true;
 	}
-} // namespace cache
+} 
 
-// Camera view point (was 'TUNGTUNGCAMERA' but called 'get_view_point' -> C3861)
 inline Camera get_view_point() {
 	Camera view_point{};
 	if (!cache::uworld)
@@ -260,7 +250,6 @@ inline Camera get_view_point() {
 	return view_point;
 }
 
-// Back-compat alias for the old name
 inline Camera TUNGTUNGCAMERA() { return get_view_point(); }
 
 inline Vector2 world_to_screen(const Vector3& world_location) {
@@ -279,7 +268,6 @@ inline Vector2 world_to_screen(const Vector3& world_location) {
 	return Vector2(x, y);
 }
 
-// Back-compat alias for the old name
 inline Vector2 TUNGTUNGWorldtoscreen(const Vector3& world_location) { return world_to_screen(world_location); }
 
 inline Vector3 get_bone(std::uintptr_t mesh, int bone_id) {
@@ -296,5 +284,4 @@ inline Vector3 get_bone(std::uintptr_t mesh, int bone_id) {
 	return Vector3(matrix._41, matrix._42, matrix._43);
 }
 
-// Back-compat alias for the old name
 inline Vector3 TUNGTUNGBONE(std::uintptr_t mesh, int bone_id) { return get_bone(mesh, bone_id); }
